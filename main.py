@@ -9,6 +9,17 @@ def get_image_dimensions(image_path):
         width, height = img.size
     return width, height
 
+def clear_folder(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.remove(file_path)  # remove files and symbolic links
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)  # remove directories
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
+
 @click.command()
 @click.option('--src_dir', '-s', help='Spotlight Source directory', default="%LOCALAPPDATA%\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets")
 @click.option('--dest_dir', '-d', help='Spotlight Destination directory', default="./wallpapers")
@@ -25,8 +36,9 @@ def main(src_dir:str, dest_dir:str):
     
     if os.path.exists(dest_dir):
         print(f"Cleaning {dest_dir}")
-        shutil.rmtree(dest_dir)
-    os.mkdir(dest_dir)
+        clear_folder(dest_dir)
+    else:
+        os.mkdir(dest_dir)
 
     for file in os.listdir(src_dir):
         source_path = f"{src_dir}/{file}"
@@ -37,10 +49,10 @@ def main(src_dir:str, dest_dir:str):
             print(f"Copying {source_path} to {dest_path}")
             shutil.copy(source_path, dest_path)
 
-        width, height = get_image_dimensions(dest_path)
-        if width < 1920 or height < 1080:
-            print(f"Removing {dest_path} as it is smaller than 1920x1080")
-            os.remove(dest_path)
+            width, height = get_image_dimensions(dest_path)
+            if width < 1920 or height < 1080:
+                print(f"Removing {dest_path} as it is smaller than 1920x1080")
+                os.remove(dest_path)
 
     print("Done")
 
